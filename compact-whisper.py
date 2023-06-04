@@ -57,23 +57,28 @@ def str2bool(string):
         raise ValueError(f"Expected one of {set(str2val.keys())}, got {string}")
 
 
-class Unbuffered(object):
-   def init(self, stream):
-       self.stream = stream
-   def write(self, data):
-       self.stream.write(data)
-       self.stream.flush()
-   def writelines(self, datas):
-       self.stream.writelines(datas)
-       self.stream.flush()
-   def getattr(self, attr):
-       return getattr(self.stream, attr)
 
-sys.stdout = Unbuffered(sys.stdout)
 sys.stdout.reconfigure(encoding='utf-8')
+
+class Unbuffered(TextIO):
+    def __init__(self, stream):
+        self.stream = stream
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+    def writelines(self, datas):
+        self.stream.writelines(datas)
+        self.stream.flush()
+    def getattr(self, attr):
+        return getattr(self.stream, attr)
+    def flush(self):
+        self.stream.flush()
+
 
 system_encoding = sys.getdefaultencoding()
 stdout_encoding = sys.stdout.encoding
+
+
 if system_encoding != "utf-8":
     def make_safe(string):
         return string.encode(system_encoding, errors="replace").decode(system_encoding)
@@ -83,6 +88,8 @@ elif stdout_encoding != "utf-8":
 else:
     def make_safe(string):
         return string
+
+sys.stdout = Unbuffered(sys.stdout)
 
 
 def cli():
