@@ -3,7 +3,7 @@
 Based on whisper-standalone-win
 
 ## Create standalone executables of OpenAI's Whisper & Faster-Whisper
-pyinstaller -F compact-whisper.py
+`pyinstaller -F compact-whisper.py`
 
 Standalone executables of [OpenAI's Whisper](https://github.com/openai/whisper) & [Faster-Whisper](https://github.com/guillaumekln/faster-whisper) for those who don't want to bother with Python.
 
