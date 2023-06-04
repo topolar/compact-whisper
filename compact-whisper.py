@@ -283,10 +283,9 @@ def cli():
                 lefts=''
                 if progress>1:
                     secondsLeft=(time.time()-start_time3)/progress*(100-progress);
-                    if secondsLeft>60:
-                        lefts=f"< {round(secondsLeft/60)} m"
-                    else:
-                        lefts=f"< {round(secondsLeft)} s"
+                    minutes=round(secondsLeft//60)
+                    seconds=round(secondsLeft%60)
+                    lefts=f"< {minutes}:{seconds:02}"
                 line = f"{progress}% {lefts} [{format_timestamp(segment.start)} --> {format_timestamp(segment.end)}] {segment.text}"
                 print(make_safe(line))
                 segment_duration = str(segment.end - segment.start)
