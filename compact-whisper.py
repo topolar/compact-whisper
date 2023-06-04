@@ -279,7 +279,15 @@ def cli():
         all_segments = []
         with tqdm(file=capture, total=total_dur, smoothing=0.00001, maxinterval=100000.0, bar_format=bar_format) as pbar:
             for segment in segments:
-                line = f"{round(segment.start/total_dur*100,1)}% [{format_timestamp(segment.start)} --> {format_timestamp(segment.end)}] {segment.text}"
+                progress=round(segment.start/total_dur*100,1)
+                lefts=''
+                if progress>1:
+                    secondsLeft=(time.time()-start_time3)/progress*(100-progress);
+                    if secondsLeft>60:
+                        lefts=f"< {round(secondsLeft/60)} m"
+                    else:
+                        lefts=f"< {round(secondsLeft)} s"
+                line = f"{progress}% {lefts} [{format_timestamp(segment.start)} --> {format_timestamp(segment.end)}] {segment.text}"
                 print(make_safe(line))
                 segment_duration = str(segment.end - segment.start)
                 all_segments.append(segment)
