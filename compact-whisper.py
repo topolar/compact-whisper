@@ -22,6 +22,7 @@ from threading import Thread
 from time import sleep
 from config import *
 from writers import *
+from version import __appver__
 
 
 start_time = time.time()
@@ -167,12 +168,12 @@ def cli():
 
 
     if device.startswith('cuda'):
-        print("\nStandalone Faster-Whisper r125 running on: CUDA\n")
+        print(f"\ncompact-whisper {__appver__} running on: CUDA\n")
         if args.verbose:
             print("Number of visible GPU devices: %s \n" % ctranslate2.get_cuda_device_count())
             print("Supported compute types by GPU: %s \n" % ctranslate2.get_supported_compute_types("cuda", device_index))
     elif device.startswith('cpu'):
-        print("\nStandalone Faster-Whisper r125 running on: CPU\n")
+        print(f"\ncompact-whisper {__appver__} running on: CPU\n")
         if args.verbose:
             print("Supported compute types by CPU: %s \n" % ctranslate2.get_supported_compute_types("cpu"))
 
@@ -190,13 +191,14 @@ def cli():
         print("\nModel loaded in: %s seconds" % round((time.time() - start_time), 2))
 
     word_options = ["highlight_words", "max_line_count", "max_line_width"]
-    if not args["word_timestamps"]:
+    argsDict=vars(args)
+    if not args.word_timestamps:
         for option in word_options:
-            if args[option]:
+            if argsDict[option]:
                 parser.error(f"--{option} requires --word_timestamps True")
-    if args["max_line_count"] and not args["max_line_width"]:
+    if args.max_line_count and not args.max_line_width:
         parser.warn("--max_line_count has no effect without --max_line_width")
-    writer_args = {arg: args.pop(arg) for arg in word_options}
+    writer_args = {arg: argsDict.pop(arg,None) for arg in word_options}
     writer = get_writer(args.output_format, args.output_dir)
 
     vad_parameters = {}

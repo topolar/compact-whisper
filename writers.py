@@ -59,7 +59,7 @@ class SubtitlesWriter(ResultWriter):
         highlight_words = options.get("highlight_words", False)
         max_line_width = 1000 if raw_max_line_width is None else raw_max_line_width
         preserve_segments = max_line_count is None or raw_max_line_width is None
-
+        print (f"max_line_width: {max_line_width} max_line_count: {max_line_count} preserve_segments: {preserve_segments}")
         def iterate_subtitles():
             line_len = 0
             line_count = 1

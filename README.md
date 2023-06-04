@@ -2,8 +2,17 @@
 
 Based on whisper-standalone-win
 
+## Requirements to run on CUDA;
+- `https://developer.nvidia.com/cuda-11.2.0-download-archive`
+- `https://developer.nvidia.com/cudnn`
+
+## To run on CPU:
+use parameter `--device cpu`
 ## Create standalone executables of OpenAI's Whisper & Faster-Whisper
 `pyinstaller -F compact-whisper.py`
+
+## Example of start with script:
+`python .\compact-whisper.py data\sample01.wav --language cs --vad_filter True --model base --word_timestamps True --output_format all --max_line_width 42 --max_line_count 2`
 
 Standalone executables of [OpenAI's Whisper](https://github.com/openai/whisper) & [Faster-Whisper](https://github.com/guillaumekln/faster-whisper) for those who don't want to bother with Python.
 

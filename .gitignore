@@ -2,3 +2,5 @@ __pycache__
 build
 dist
 compact-whisper.spec
+_models
+data
