@@ -2,31 +2,33 @@
 # Based on code from https://github.com/openai/whisper
 #
 
+import copy
 import os
 import json
 import re
 from typing import Callable, TextIO, Optional
 
+from faster_whisper.utils import format_timestamp
 
-def format_timestamp(
-    seconds: float, always_include_hours: bool = False, decimal_marker: str = "."
-):
-    assert seconds >= 0, "non-negative timestamp expected"
-    milliseconds = round(seconds * 1000.0)
+# def format_timestamp(
+#     seconds: float, always_include_hours: bool = False, decimal_marker: str = "."
+# ):
+#     assert seconds >= 0, "non-negative timestamp expected"
+#     milliseconds = round(seconds * 1000.0)
 
-    hours = milliseconds // 3_600_000
-    milliseconds -= hours * 3_600_000
+#     hours = milliseconds // 3_600_000
+#     milliseconds -= hours * 3_600_000
 
-    minutes = milliseconds // 60_000
-    milliseconds -= minutes * 60_000
+#     minutes = milliseconds // 60_000
+#     milliseconds -= minutes * 60_000
 
-    seconds = milliseconds // 1_000
-    milliseconds -= seconds * 1_000
+#     seconds = milliseconds // 1_000
+#     milliseconds -= seconds * 1_000
 
-    hours_marker = f"{hours:02d}:" if always_include_hours or hours > 0 else ""
-    return (
-        f"{hours_marker}{minutes:02d}:{seconds:02d}{decimal_marker}{milliseconds:03d}"
-    )
+#     hours_marker = f"{hours:02d}:" if always_include_hours or hours > 0 else ""
+#     return (
+#         f"{hours_marker}{minutes:02d}:{seconds:02d}{decimal_marker}{milliseconds:03d}"
+#     )
 
 
 class ResultWriter:
@@ -65,19 +67,20 @@ class SubtitlesWriter(ResultWriter):
             line_count = 1
             # the next subtitle to yield (a list of word timings with whitespace)
             subtitle: list[dict] = []
-            last = result["segments"][0]["words"][0]["start"]
+            last = result["segments"][0].words[0].start
             for segment in result["segments"]:
-                for i, original_timing in enumerate(segment["words"]):
-                    timing = original_timing.copy()
-                    long_pause = not preserve_segments and timing["start"] - last > 3.0
-                    has_room = line_len + len(timing["word"]) <= max_line_width
+                for i, original_timing in enumerate(segment.words):
+                    timing = original_timing._replace()
+                    long_pause = not preserve_segments and timing.start - last > 3.0
+                    has_room = line_len + len(timing.word) <= max_line_width
                     seg_break = i == 0 and len(subtitle) > 0 and preserve_segments
                     if line_len > 0 and has_room and not long_pause and not seg_break:
                         # line continuation
-                        line_len += len(timing["word"])
+                        line_len += len(timing.word)
                     else:
                         # new line
-                        timing["word"] = timing["word"].strip()
+                        timing=timing._replace(word=timing.word.strip())
+                        # timing.word = timing.word.strip()
                         if (
                             len(subtitle) > 0
                             and max_line_count is not None
@@ -91,28 +94,28 @@ class SubtitlesWriter(ResultWriter):
                         elif line_len > 0:
                             # line break
                             line_count += 1
-                            timing["word"] = "\n" + timing["word"]
-                        line_len = len(timing["word"].strip())
+                            timing = timing._replace(word="\n" + timing.word)
+                            # timing.word = "\n" + timing.word
+                        line_len = len(timing.word.strip())
                     subtitle.append(timing)
-                    last = timing["start"]
+                    last = timing.start
             if len(subtitle) > 0:
                 yield subtitle
-
         if (
             len(result["segments"]) > 0
-            and "words" in result["segments"][0]
-            and result["segments"][0]["words"]
+            # and "words" in result["segments"][0]
+            and len(result["segments"][0].words)>0
         ):
             for subtitle in iterate_subtitles():
-                subtitle_start = self.format_timestamp(subtitle[0]["start"])
-                subtitle_end = self.format_timestamp(subtitle[-1]["end"])
-                subtitle_text = "".join([word["word"] for word in subtitle])
+                subtitle_start = self.format_timestamp(subtitle[0].start)
+                subtitle_end = self.format_timestamp(subtitle[-1].end)
+                subtitle_text = "".join([word.word for word in subtitle])
                 if highlight_words:
                     last = subtitle_start
-                    all_words = [timing["word"] for timing in subtitle]
+                    all_words = [timing.word for timing in subtitle]
                     for i, this_word in enumerate(subtitle):
-                        start = self.format_timestamp(this_word["start"])
-                        end = self.format_timestamp(this_word["end"])
+                        start = self.format_timestamp(this_word.start)
+                        end = self.format_timestamp(this_word.end)
                         if last != start:
                             yield last, start, subtitle_text
 
@@ -129,12 +132,13 @@ class SubtitlesWriter(ResultWriter):
                     yield subtitle_start, subtitle_end, subtitle_text
         else:
             for segment in result["segments"]:
-                segment_start = self.format_timestamp(segment["start"])
-                segment_end = self.format_timestamp(segment["end"])
-                segment_text = segment["text"].strip().replace("-->", "->")
+                segment_start = self.format_timestamp(segment.start)
+                segment_end = self.format_timestamp(segment.end)
+                segment_text = segment.text.strip().replace("-->", "->")
                 yield segment_start, segment_end, segment_text
 
     def format_timestamp(self, seconds: float):
+    
         return format_timestamp(
             seconds=seconds,
             always_include_hours=self.always_include_hours,
@@ -148,17 +152,17 @@ class SubtitlesWriter_ref(ResultWriter):
 
     def iterate_result(self, result: dict, options: dict):
         for segment in result["segments"]:
-            segment_start = self.format_timestamp(segment["start"])
-            segment_end = self.format_timestamp(segment["end"])
-            segment_text = segment["text"].strip().replace("-->", "->")
+            segment_start = self.format_timestamp(segment.start)
+            segment_end = self.format_timestamp(segment.end)
+            segment_text = segment.text.strip().replace("-->", "->")
             highlight = options.get("highlight_words", False)
 
-            if word_timings := segment["words"]:
-                all_words = [timing["word"] for timing in word_timings]
+            if word_timings := segment.words:
+                all_words = [timing.word for timing in word_timings]
                 all_words[0] = all_words[0].strip()  # remove the leading space, if any
                 last = segment_start
                 for i, this_word in enumerate(word_timings):
-                    start = self.format_timestamp(this_word["start"])
+                    start = self.format_timestamp(this_word.start)
                     end = self.format_timestamp(this_word["end"])
                     if last != start:
                         yield last, start, segment_text
@@ -230,8 +234,8 @@ class WriteTSV(ResultWriter):
     def write_result(self, result: dict, file: TextIO, options: dict):
         print("start", "end", "text", sep="\t", file=file)
         for segment in result["segments"]:
-            print(round(1000 * segment["start"]), file=file, end="\t")
-            print(round(1000 * segment["end"]), file=file, end="\t")
+            print(round(1000 * segment.start), file=file, end="\t")
+            print(round(1000 * segment.end), file=file, end="\t")
             print(segment["text"].strip().replace("\t", " "), file=file, flush=True)
 
 
