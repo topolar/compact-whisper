@@ -9,7 +9,7 @@ Based on whisper-standalone-win
 ## To run on CPU:
 use parameter `--device cpu`
 ## Create standalone executables of OpenAI's Whisper & Faster-Whisper
-`pyinstaller -F compact-whisper.py`
+`pyinstaller -F compact-whisper.py --collect-all faster_whisper  --exclude-module torch`
 
 ## Example of start with script:
 `python .\compact-whisper.py data\sample01.wav --language cs --vad_filter True --model base --word_timestamps True --output_format all --max_line_width 42 --max_line_count 2`

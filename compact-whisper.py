@@ -271,7 +271,7 @@ def cli():
                     Thread(target=pbar_delayed, daemon=False).start()
 
         print("\n\nTranscription speed: %s audio seconds/s" % round(info.duration / ((time.time() - start_time3)), 2))
-        writer({"segments": all_segments}, audio_path, **writer_args)
+        writer({"segments": all_segments}, audio_path, writer_args)
         print("\nOperation finished in: %s seconds" % int(round((time.time() - start_time))))
 
 
