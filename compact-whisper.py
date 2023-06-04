@@ -303,6 +303,6 @@ def cli():
         print("Storing transcription")
         writer({"segments": all_segments}, audio_path, writer_args)
         print("\nOperation finished in: %s seconds" % int(round((time.time() - start_time))))
-        quit(0)
+        sys.exit(0)
 if __name__ == "__main__":
     cli()
