@@ -193,7 +193,7 @@ class WriteTXT(ResultWriter):
 
     def write_result(self, result: dict, file: TextIO, options: dict):
         for segment in result["segments"]:
-            print(segment["text"].strip(), file=file, flush=True)
+            print(segment.text.strip(), file=file, flush=True)
 
 
 class WriteSRT(SubtitlesWriter):
@@ -236,7 +236,7 @@ class WriteTSV(ResultWriter):
         for segment in result["segments"]:
             print(round(1000 * segment.start), file=file, end="\t")
             print(round(1000 * segment.end), file=file, end="\t")
-            print(segment["text"].strip().replace("\t", " "), file=file, flush=True)
+            print(segment.text.strip().replace("\t", " "), file=file, flush=True)
 
 
 class WriteJSON(ResultWriter):

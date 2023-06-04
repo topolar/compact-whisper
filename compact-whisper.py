@@ -29,6 +29,8 @@ start_time = time.time()
 default_model_dir = os.getcwd() + "/_models"
 
 
+
+
 def from_language_to_iso_code(language):
     if language is not None:
         language_name = language.lower()
@@ -55,6 +57,20 @@ def str2bool(string):
         raise ValueError(f"Expected one of {set(str2val.keys())}, got {string}")
 
 
+class Unbuffered(object):
+   def init(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def getattr(self, attr):
+       return getattr(self.stream, attr)
+
+sys.stdout = Unbuffered(sys.stdout)
+sys.stdout.reconfigure(encoding='utf-8')
 
 system_encoding = sys.getdefaultencoding()
 stdout_encoding = sys.stdout.encoding
