@@ -93,6 +93,7 @@ sys.stdout = Unbuffered(sys.stdout)
 
 
 def cli():
+    print(f"\ncompact-whisper {__appver__} by mistercz")
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("audio", nargs="+", type=str, help="audio file(s) to transcribe")
     parser.add_argument("--model", default="medium", help="name of the Whisper model to use")
@@ -189,14 +190,13 @@ def cli():
 
     suppress_tokens = [int(t) for t in args.suppress_tokens.split(",")]
 
-
     if device.startswith('cuda'):
-        print(f"\ncompact-whisper {__appver__} running on: CUDA\n")
+        print(f"running on: CUDA")
+        print("Number of visible GPU devices: %s " % ctranslate2.get_cuda_device_count())
         if args.verbose:
-            print("Number of visible GPU devices: %s \n" % ctranslate2.get_cuda_device_count())
             print("Supported compute types by GPU: %s \n" % ctranslate2.get_supported_compute_types("cuda", device_index))
     elif device.startswith('cpu'):
-        print(f"\ncompact-whisper {__appver__} running on: CPU\n")
+        print(f"running on: CPU")
         if args.verbose:
             print("Supported compute types by CPU: %s \n" % ctranslate2.get_supported_compute_types("cpu"))
 
@@ -210,8 +210,7 @@ def cli():
         ctranslate2.set_log_level(logging.DEBUG)
 
     model = WhisperModel(model_path, device=device, device_index=device_index, compute_type=compute_type, cpu_threads=cores, download_root=default_model_dir)
-    if args.verbose:
-        print("\nModel loaded in: %s seconds" % round((time.time() - start_time), 2))
+    print("\nModel loaded in: %s seconds" % round((time.time() - start_time), 2))
 
     word_options = ["highlight_words", "max_line_count", "max_line_width"]
     argsDict=vars(args)
@@ -250,8 +249,7 @@ def cli():
             vad_filter=args.vad_filter, vad_parameters=vad_parameters, suppress_tokens=suppress_tokens,
         )
 
-        if args.verbose:
-            print("Audio processing finished in: %s seconds\n" % round((time.time() - start_time2), 2))
+        print("Audio processing finished in: %s seconds\n" % round((time.time() - start_time2), 2))
 
         def re_form(s):
             s1 = s.rsplit('|', 1)[0]
@@ -281,7 +279,7 @@ def cli():
         all_segments = []
         with tqdm(file=capture, total=total_dur, smoothing=0.00001, maxinterval=100000.0, bar_format=bar_format) as pbar:
             for segment in segments:
-                line = f"[{format_timestamp(segment.start)} --> {format_timestamp(segment.end)}] {segment.text}"
+                line = f"{round(segment.start/total_dur*100,1)}% [{format_timestamp(segment.start)} --> {format_timestamp(segment.end)}] {segment.text}"
                 print(make_safe(line))
                 segment_duration = str(segment.end - segment.start)
                 all_segments.append(segment)
@@ -293,10 +291,10 @@ def cli():
                     last_burst = time_now
                     Thread(target=pbar_delayed, daemon=False).start()
 
-        print("\n\nTranscription speed: %s audio seconds/s" % round(info.duration / ((time.time() - start_time3)), 2))
+        print("\nTranscription speed: %s audio seconds/s" % round(info.duration / ((time.time() - start_time3)), 2))
+        print("Storing transcription")
         writer({"segments": all_segments}, audio_path, writer_args)
         print("\nOperation finished in: %s seconds" % int(round((time.time() - start_time))))
-
-
+        quit(0)
 if __name__ == "__main__":
     cli()
