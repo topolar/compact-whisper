@@ -4,3 +4,5 @@ dist
 compact-whisper.spec
 _models
 data
+Lib
+Scripts
